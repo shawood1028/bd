@@ -32,6 +32,21 @@
       <version>1.19.0</version>
     </dependency>
 
+    <!-- kafka 连接器   -->
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-connector-kafka</artifactId>
+      <version>3.2.0-1.19</version>
+    </dependency>
+
+    <!-- 使用kafka连接器需要添加下面依赖   -->
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-connector-base</artifactId>
+      <version>1.19.1</version>
+    </dependency>
+
+
     <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-walkthrough-datastream-java -->
     <dependency>
       <groupId>org.apache.flink</groupId>
