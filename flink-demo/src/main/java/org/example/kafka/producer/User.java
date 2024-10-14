@@ -7,6 +7,7 @@ public class User {
     public int id;
     public String uuid;
     public long timeStamp;
+    public int type;
 
     public User() {
     }
@@ -17,8 +18,15 @@ public class User {
         this.timeStamp = timeStamp;
     }
 
+    public User(int id, String uuid, long timeStamp, int type) {
+        this.id = id;
+        this.uuid = uuid;
+        this.timeStamp = timeStamp;
+        this.type = type;
+    }
+
     public User genUser() {
-        User user = new User(genRandomId(), genRandomUUID(), genRandomLocalTime());
+        User user = new User(genRandomId(), genRandomUUID(), genRandomLocalTime(), genRandomType());
         return user;
     }
 
@@ -52,6 +60,7 @@ public class User {
                 "id=" + id +
                 ", uuid='" + uuid + '\'' +
                 ", timeStamp=" + timeStamp +
+                ", type=" + type +
                 '}';
     }
 
@@ -74,5 +83,11 @@ public class User {
 
     public static long genRandomLocalTime() {
         return System.currentTimeMillis();
+    }
+
+    public static int genRandomType() {
+        Random random = new Random();
+        int r = random.nextInt(3);
+        return r;
     }
 }

@@ -7,10 +7,11 @@ import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsIni
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 public class KafkaDemo {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(10);
 
-        String brokers = "localhost:9092";
+        String brokers = "localhost:9094";
 
         KafkaSource<String> kafkaSource = KafkaSource.<String>builder()
                 .setBootstrapServers(brokers)
@@ -20,6 +21,8 @@ public class KafkaDemo {
                 .setValueOnlyDeserializer(new SimpleStringSchema())
                 .build();
 
-        env.fromSource(kafkaSource, WatermarkStrategy.noWatermarks(), "Kafka Source");
+        env.fromSource(kafkaSource, WatermarkStrategy.noWatermarks(), "Kafka Source")
+                .print();
+        env.execute();
     }
 }

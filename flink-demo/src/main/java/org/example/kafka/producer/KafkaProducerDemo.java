@@ -12,12 +12,18 @@ import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class KafkaProducerDemo {
+    private static final Logger LOG = LoggerFactory.getLogger(KafkaProducerDemo.class);
+
     public static void main(String[] args) throws Exception {
-        // 自定义flink source
-        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        /*
+         * 创建远程环境，远程提交flink任务。
+        */
+        final StreamExecutionEnvironment env = StreamExecutionEnvironment.createRemoteEnvironment("localhost", 8081, "/Users/apple/shawood/github/flink/flink-demo/target/flink-demo-1.0-SNAPSHOT.jar");
         env.setParallelism(1);
         // 数据生成器source
         GeneratorFunction<Long, String> generatorFunction = new GeneratorFunction<Long, String>() {
@@ -27,12 +33,14 @@ public class KafkaProducerDemo {
                 ObjectMapper mapper = new ObjectMapper();
                 // 序列化
                 String json = mapper.writeValueAsString(user.genUser());
+                System.out.println("sys: " + json);
+                LOG.info("LOG: " + json);
                 return json;
             }
         };
-        long numberOfRecord = 10000000;
+        long numberOfRecord = 1000;
 
-        DataGeneratorSource<String> source = new DataGeneratorSource<>(generatorFunction, numberOfRecord, RateLimiterStrategy.perSecond(10), Types.STRING);
+        DataGeneratorSource<String> source = new DataGeneratorSource<>(generatorFunction, numberOfRecord, RateLimiterStrategy.perSecond(1), Types.STRING);
 
         DataStreamSource<String> stream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "Generator Source");
 
@@ -46,8 +54,10 @@ public class KafkaProducerDemo {
                         .setValueSerializationSchema(new SimpleStringSchema())
                         .build()
                 )
-                .setDeliveryGuarantee(DeliveryGuarantee.EXACTLY_ONCE)
+                .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
+//                .setProperty("transaction.timeout.ms",1000*60*5+"")
                 .build();
+        stream.print();
         stream.sinkTo(sink);
         env.execute();
     }
