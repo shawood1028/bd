@@ -7,7 +7,8 @@ public class User {
     public int id;
     public String uuid;
     public long timeStamp;
-    public int type;
+    public int type = -1;
+    public int amount;
 
     public User() {
     }
@@ -18,15 +19,16 @@ public class User {
         this.timeStamp = timeStamp;
     }
 
-    public User(int id, String uuid, long timeStamp, int type) {
+    public User(int id, String uuid, long timeStamp, int type, int amount) {
         this.id = id;
         this.uuid = uuid;
         this.timeStamp = timeStamp;
         this.type = type;
+        this.amount = amount;
     }
 
     public User genUser() {
-        User user = new User(genRandomId(), genRandomUUID(), genRandomLocalTime(), genRandomType());
+        User user = new User(genRandomId(), genRandomUUID(), genRandomLocalTime(), genRandomType(), genRandomAmount());
         return user;
     }
 
@@ -42,6 +44,14 @@ public class User {
         this.uuid = uuid;
     }
 
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    public void setAmount(int amount) {
+        this.amount = amount;
+    }
+
     public int getId() {
         return id;
     }
@@ -54,13 +64,22 @@ public class User {
         return uuid;
     }
 
+    public int getType() {
+        return type;
+    }
+
+    public int getAmount() {
+        return amount;
+    }
+
     @Override
     public String toString() {
-        return "{" +
+        return "User{" +
                 "id=" + id +
                 ", uuid='" + uuid + '\'' +
                 ", timeStamp=" + timeStamp +
                 ", type=" + type +
+                ", amount=" + amount +
                 '}';
     }
 
@@ -89,5 +108,11 @@ public class User {
         Random random = new Random();
         int r = random.nextInt(3);
         return r;
+    }
+
+    public static int genRandomAmount() {
+        Random random = new Random();
+        int r = random.nextInt(9);
+        return r*100;
     }
 }
