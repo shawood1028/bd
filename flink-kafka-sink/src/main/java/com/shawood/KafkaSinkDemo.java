@@ -44,15 +44,18 @@ import java.util.Properties;
 public class KafkaSinkDemo {
 
 	public static void main(String[] args) throws Exception {
-		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-
-		String propsFilePath = "/Users/apple/shawood/github/flink/flink-kafka-sink/src/main/resources/kafka.properties";
-		ParameterTool parameterTool = ParameterTool.fromPropertiesFile(propsFilePath);
+		/*System.out.println("开始远程提交 Kafka Sink Demo ...");
+		final StreamExecutionEnvironment env = StreamExecutionEnvironment.createRemoteEnvironment(
+				"localhost",8081,"/Users/apple/shawood/github/flink/flink-kafka-sink/target/flink-kafka-sink-1.0-SNAPSHOT.jar");
+		*/
+		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+		env.setParallelism(3);
 
 		KafkaSource<String> kafkaSource = KafkaSource.<String>builder()
-				.setBootstrapServers(parameterTool.get("brokers"))
-				.setTopics(parameterTool.get("topic"))
-				.setGroupId(parameterTool.get("group-id"))
+//				.setBootstrapServers("localhost:9192,localhost:9292,localhost:9392")
+				.setBootstrapServers("localhost:9192")
+				.setTopics("test-input-topic")
+				.setGroupId("my-group")
 				.setStartingOffsets(OffsetsInitializer.earliest())
 				.setValueOnlyDeserializer(new SimpleStringSchema())
 				.build();
@@ -62,6 +65,6 @@ public class KafkaSinkDemo {
 		stream.print();
 
 		// Execute program, beginning computation.
-		env.execute("Flink Java API Skeleton");
+		env.execute("Flink Kafka Sink");
 	}
 }

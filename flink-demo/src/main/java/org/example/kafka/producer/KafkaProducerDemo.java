@@ -24,7 +24,7 @@ public class KafkaProducerDemo {
         /*
          * 创建远程环境，远程提交flink任务。
         */
-        final StreamExecutionEnvironment env = StreamExecutionEnvironment.createRemoteEnvironment("localhost", 8081, "/Users/apple/shawood/github/flink/flink-demo/target/flink-demo-1.0-SNAPSHOT.jar");
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
         // 数据生成器source
         GeneratorFunction<Long, String> generatorFunction = new GeneratorFunction<Long, String>() {
@@ -34,7 +34,6 @@ public class KafkaProducerDemo {
                 ObjectMapper mapper = new ObjectMapper();
                 // 序列化
                 String json = mapper.writeValueAsString(user.genUser());
-                LOG.info("LOG: " + json);
                 return json;
             }
         };
@@ -45,7 +44,7 @@ public class KafkaProducerDemo {
         DataStreamSource<String> stream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "Generator Source");
 
         // 设置kafka参数
-        String kafkaBroker = "localhost:9094";
+        String kafkaBroker = "localhost:9192";
         String kafkaSinkTopic = "test-input-topic";
         KafkaSink<String> sink = KafkaSink.<String>builder()
                 .setBootstrapServers(kafkaBroker)

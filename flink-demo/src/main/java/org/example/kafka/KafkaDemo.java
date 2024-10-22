@@ -19,13 +19,11 @@ public class KafkaDemo {
         /*
          * 创建远程环境，远程提交flink任务。
          */
-        final StreamExecutionEnvironment env = StreamExecutionEnvironment.createRemoteEnvironment("localhost", 8081, "/Users/apple/shawood/github/flink/flink-demo/target/flink-demo-1.0-SNAPSHOT.jar");
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
 
-        String brokers = "localhost:9094";
-
         KafkaSource<String> kafkaSource = KafkaSource.<String>builder()
-                .setBootstrapServers(brokers)
+                .setBootstrapServers("localhost:9192")
                 .setTopics("test-input-topic")
                 .setGroupId("my-group")
                 .setStartingOffsets(OffsetsInitializer.earliest())

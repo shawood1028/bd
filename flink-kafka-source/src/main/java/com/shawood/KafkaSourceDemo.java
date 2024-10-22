@@ -22,22 +22,15 @@ import com.shawood.utils.User;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.typeinfo.Types;
+import org.apache.flink.api.connector.source.util.ratelimit.RateLimiterStrategy;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.datagen.source.DataGeneratorSource;
 import org.apache.flink.connector.datagen.source.GeneratorFunction;
 import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
-import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchemaBuilder;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-
-import java.io.FileInputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Properties;
 
 /**
  * Skeleton for a Flink DataStream Job.
@@ -54,8 +47,13 @@ import java.util.Properties;
 public class KafkaSourceDemo {
 
 	public static void main(String[] args) throws Exception {
-		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-		env.setParallelism(3);
+
+//		System.out.println("开始远程提交 Kafka Source Demo ...");
+//		final StreamExecutionEnvironment env = StreamExecutionEnvironment.createRemoteEnvironment(
+//				"localhost",8081,"/Users/apple/shawood/github/flink/flink-kafka-source/target/flink-kafka-source-1.0-SNAPSHOT.jar");
+//
+		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+		env.setParallelism(1);
 		// gen source
 		GeneratorFunction<Long,String> generatorFunction = l -> {
             User user = new User();
@@ -65,25 +63,39 @@ public class KafkaSourceDemo {
             return json;
         };
 
-		long numberOfRecord = Long.MAX_VALUE;
+		long numberOfRecord = 10000;
 
-		DataGeneratorSource<String> source = new DataGeneratorSource<>(generatorFunction,numberOfRecord, Types.STRING);
+		DataGeneratorSource<String> source = new DataGeneratorSource<>(generatorFunction,numberOfRecord, RateLimiterStrategy.perSecond(100), Types.STRING);
 
 		DataStreamSource<String> sourceStream = env.fromSource(source, WatermarkStrategy.noWatermarks(),"DATAGEN random user");
 
-		Properties props = new Properties();
-		props.load(new FileInputStream("/Users/apple/shawood/github/flink/flink-kafka-source/src/main/resources/kafka.properties"));
-		KafkaSink<String> sink = KafkaSink.<String>builder()
-				.setBootstrapServers(props.getProperty("brokers"))
+		sourceStream.print();
+		KafkaSink<String> kafkaSink = KafkaSink.<String>builder()
+				.setBootstrapServers("localhost:9192, localhost:9292, localhost:9392")
 				.setRecordSerializer(KafkaRecordSerializationSchema.builder()
-						.setTopic(props.getProperty("topic"))
+						.setTopic("test-input-topic")
 						.setValueSerializationSchema(new SimpleStringSchema())
 						.build()
 				)
 				.setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
 				.build();
-		sourceStream.print();
-		sourceStream.sinkTo(sink);
-		env.execute("Flink Kafka Source");
+
+		sourceStream.sinkTo(kafkaSink);
+
+		// 设置kafka参数
+//		String kafkaBroker = "localhost:9192,localhost:9292,localhost:9392";
+/*		String kafkaBroker = "localhost:9192";
+		String kafkaSinkTopic = "test-input-topic";
+		KafkaSink<String> sink = KafkaSink.<String>builder()
+				.setBootstrapServers(kafkaBroker)
+				.setRecordSerializer(KafkaRecordSerializationSchema.builder()
+						.setTopic(kafkaSinkTopic)
+						.setValueSerializationSchema(new SimpleStringSchema())
+						.build()
+				)
+				.setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
+				.build();
+		sourceStream.sinkTo(sink);*/
+		env.execute("Flink Kafka Source Demo");
 	}
 }
